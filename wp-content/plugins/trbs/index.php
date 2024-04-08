@@ -4,7 +4,7 @@
  * Plugin Name: TRBS
  * Description: Plugin for TRBS
  * Version: 1.0
- * Author: Saugat Adhikari
+ * 
  *
  */
 register_activation_hook(__FILE__, 'crudOperationsTable');
@@ -283,7 +283,7 @@ function sa_frontend_data()
                         <span class="close" id="span">&times;</span>
                         <table>
                             <tr>
-                                <td class="has-text-align-center"><strong>TRB Code<?php echo get_current_user_id() ?></strong></td>
+                                <td class="has-text-align-center"><strong>TRB Code <?php echo get_current_user_id() ?></strong></td>
                                 <td class="has-text-align-center" id="trb_code"></td>
                             </tr>
                             <tr>
@@ -309,10 +309,22 @@ function sa_frontend_data()
                             <tr>
                                 <td class="has-text-align-center"><strong>Send Message to publisher</strong></td>
                                 <td class="has-text-align-center" id="">
-                                    <textarea></textarea>
+                                    <textarea id="message"></textarea>
                                 </td>
                             </tr>
-                        </table>  
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="sendMessage(
+                                        '<?php echo get_current_user_id() ?>',4
+                                        '<?php echo $row->user_id; ?>',
+                                        document.getElementById('message').value
+                                    )">
+                                        Send&nbsp;Message
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
 
                 </div>
@@ -323,7 +335,8 @@ function sa_frontend_data()
                     '<?php echo $row->year; ?>',
                     '<?php echo $row->specific_invention; ?>',
                     '<?php echo $row->level_no; ?>',
-                    '<?php echo $row->level_meaning; ?>'
+                    '<?php echo $row->level_meaning; ?>',
+                    '<?php echo $row->user_id; ?>'
                     )">
                     <div class="wp-block-group has-background is-layout-flow wp-block-group-is-layout-flow" style="background-color:#ffffff">
                         <div class="wp-block-group__inner-container">
@@ -346,8 +359,7 @@ function sa_frontend_data()
                     var modal = document.getElementById("myModal");
                     var btn = document.getElementById("myBtn");
 
-                    function showPopUp(trb_code, tech_area, year, specific_invention, level_no, level_meaning) {
-
+                    function showPopUp(trb_code, tech_area, year, specific_invention, level_no, level_meaning, userid) {
                         modal.style.display = "block";
                         document.getElementById('trb_code').innerText = trb_code;
                         document.getElementById('tech_area').innerText = tech_area;
@@ -356,6 +368,17 @@ function sa_frontend_data()
                         document.getElementById('level_no').innerText = level_no;
                         document.getElementById('level_meaning').innerText = level_meaning;
                     };
+
+                    function sendMessage(senderId, receiverId, message) {
+                        // <?php 
+                        // global $wpdb;
+                        // $table_name = $wpdb -> prefix.'trbs';
+
+                        // $sql = "INSERT INTO $table_name VALUES ('$senderId','$receiverId','$message')";
+                            
+                        //     ?>
+                        alert('Message sent successfully');
+                    }
                     document.getElementById("span").onclick = function() {
                         modal.style.display = "none";
                     }
@@ -738,7 +761,7 @@ function sa_trbs_approve_callback()
             'level_no' => $trbs['level_no'],
             'level_meaning' => $trbs['level_meaning'],
             'user_id' => $trbs['user_id']
-        ], ['%s', '%s', '%d', '%s', '%s', '%s' , '%s']);
+        ], ['%s', '%s', '%d', '%s', '%s', '%s', '%s']);
         $wpdb->delete("$table_name", ['id' => $id]);
         wp_redirect(admin_url('admin.php?page=trbs_unapprove_list'));
     };
