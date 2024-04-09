@@ -197,8 +197,165 @@ function sa_frontend_data()
             }
             ?>
         </div>
+        <style>
+            .modal {
+                display: none;
+                /* Hidden by default */
+                position: fixed;
+                /* Stay in place */
+                z-index: 1;
+                /* Sit on top */
+                padding-top: 100px;
+                /* Location of the box */
+                left: 0;
+                top: 0;
+                width: 100%;
+                /* Full width */
+                height: 100%;
+                /* Full height */
+                overflow: auto;
+                /* Enable scroll if needed */
+                background-color: rgb(0, 0, 0);
+                /* Fallback color */
+                background-color: rgba(0, 0, 0, 0.4);
+                /* Black w/ opacity */
+                max-width:100vw !important;
+            }
+
+            /* Modal Content */
+            .modal-content {
+                background-color: #fefefe;
+                margin: auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 40%;
+            }
+
+            /* The Close Button */
+            .close {
+                color: #aaaaaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .pointer {
+                cursor: pointer;
+            }
+        </style>
+        <div id="myModal" class="modal">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+                <span class="close" id="span">&times;</span>
+                <form action="" method="post">
+                    <table>
+                        <tr>
+                            <td class="has-text-align-center"><strong>TRB Code</strong></td>
+                            <td class="has-text-align-center" id="trb_code"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Technology Area</strong></td>
+                            <td class="has-text-align-center" id="tech_area"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Year Commenced</strong></td>
+                            <td class="has-text-align-center" id="year"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Specific Invention</strong></td>
+                            <td class="has-text-align-center" id="specific_invention"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Level Number</strong></td>
+                            <td class="has-text-align-center" id="level_no"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Level Meaning</strong></td>
+                            <td class="has-text-align-center" id="level_meaning"></td>
+                        </tr>
+                        <tr hidden>
+                            <td class="has-text-align-center"><strong>User Id</strong></td>
+                            <td class="has-text-align-center" id="userid"><input type="text" id="publisherid" name="userid"></td>
+                        </tr>
+                        <tr>
+                            <td class="has-text-align-center"><strong>Send Message to publisher</strong></td>
+                            <td class="has-text-align-center" id="">
+                                <textarea id="message" name="message"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <button type="submit" name="sendmessages">
+                                    Send&nbsp;Message
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+
+        </div>
+        <script>
+            var modal = document.getElementById("myModal");
+            var btn = document.getElementById("myBtn");
+
+            function showPopUp(trb_code, tech_area, year, specific_invention, level_no, level_meaning, userid) {
+                modal.style.display = "block";
+                document.getElementById('trb_code').innerText = trb_code;
+                document.getElementById('tech_area').innerText = tech_area;
+                document.getElementById('year').innerText = year;
+                document.getElementById('specific_invention').innerText = specific_invention;
+                document.getElementById('level_no').innerText = level_no;
+                document.getElementById('level_meaning').innerText = level_meaning;
+                document.getElementById('userid').value = userid;
+                document.getElementById('publisherid').value = userid;
+                console.log(userid);
+
+            };
+            document.getElementById("span").onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        </script>
 
         <?php
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'conversation';
+        $msg = '';
+        $userId = get_current_user_id();
+        if (isset($_REQUEST['sendmessages'])) {
+            $wpdb->insert("$table_name", [
+                'sender_id' => $userId,
+                'receiver_id' => $_REQUEST['userid'],
+                'message' => $_REQUEST['message'],
+            ]);
+
+
+            if ($wpdb->insert_id > 0) {
+                $msg = "Saved Successfully";
+            } else {
+                $msg = "Failed to save data $wpdb->last_error";
+            }
+        }
+        ?>
+
+        <?php
+
 
         if ($filter2 == '') {
             echo "<h5 style='text-align:center;margin-top:0px;'>TRBS List</h5>";
@@ -224,110 +381,6 @@ function sa_frontend_data()
                 <?php
             }
                 ?>
-                <style>
-                    .modal {
-                        display: none;
-                        /* Hidden by default */
-                        position: fixed;
-                        /* Stay in place */
-                        z-index: 1;
-                        /* Sit on top */
-                        padding-top: 100px;
-                        /* Location of the box */
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        /* Full width */
-                        height: 100%;
-                        /* Full height */
-                        overflow: auto;
-                        /* Enable scroll if needed */
-                        background-color: rgb(0, 0, 0);
-                        /* Fallback color */
-                        background-color: rgba(0, 0, 0, 0.4);
-                        /* Black w/ opacity */
-                    }
-
-                    /* Modal Content */
-                    .modal-content {
-                        background-color: #fefefe;
-                        margin: auto;
-                        padding: 20px;
-                        border: 1px solid #888;
-                        width: 40%;
-                    }
-
-                    /* The Close Button */
-                    .close {
-                        color: #aaaaaa;
-                        float: right;
-                        font-size: 28px;
-                        font-weight: bold;
-                    }
-
-                    .close:hover,
-                    .close:focus {
-                        color: #000;
-                        text-decoration: none;
-                        cursor: pointer;
-                    }
-
-                    .pointer {
-                        cursor: pointer;
-                    }
-                </style>
-                <div id="myModal" class="modal">
-
-                    <!-- Modal content -->
-                    <div class="modal-content">
-                        <span class="close" id="span">&times;</span>
-                        <table>
-                            <tr>
-                                <td class="has-text-align-center"><strong>TRB Code <?php echo get_current_user_id() ?></strong></td>
-                                <td class="has-text-align-center" id="trb_code"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Technology Area</strong></td>
-                                <td class="has-text-align-center" id="tech_area"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Year Commenced</strong></td>
-                                <td class="has-text-align-center" id="year"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Specific Invention</strong></td>
-                                <td class="has-text-align-center" id="specific_invention"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Level Number</strong></td>
-                                <td class="has-text-align-center" id="level_no"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Level Meaning</strong></td>
-                                <td class="has-text-align-center" id="level_meaning"></td>
-                            </tr>
-                            <tr>
-                                <td class="has-text-align-center"><strong>Send Message to publisher</strong></td>
-                                <td class="has-text-align-center" id="">
-                                    <textarea id="message"></textarea>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>
-                                    <button onclick="sendMessage(
-                                        '<?php echo get_current_user_id() ?>',4
-                                        '<?php echo $row->user_id; ?>',
-                                        document.getElementById('message').value
-                                    )">
-                                        Send&nbsp;Message
-                                    </button>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-
-                </div>
 
                 <div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow pointer <?php echo $i; ?>" onclick="showPopUp(
                     '<?php echo $row->trb_code ?>',
@@ -355,41 +408,7 @@ function sa_frontend_data()
                         </div>
                     </div>
                 </div>
-                <script>
-                    var modal = document.getElementById("myModal");
-                    var btn = document.getElementById("myBtn");
 
-                    function showPopUp(trb_code, tech_area, year, specific_invention, level_no, level_meaning, userid) {
-                        modal.style.display = "block";
-                        document.getElementById('trb_code').innerText = trb_code;
-                        document.getElementById('tech_area').innerText = tech_area;
-                        document.getElementById('year').innerText = year;
-                        document.getElementById('specific_invention').innerText = specific_invention;
-                        document.getElementById('level_no').innerText = level_no;
-                        document.getElementById('level_meaning').innerText = level_meaning;
-                    };
-
-                    function sendMessage(senderId, receiverId, message) {
-                        // <?php 
-                        // global $wpdb;
-                        // $table_name = $wpdb -> prefix.'trbs';
-
-                        // $sql = "INSERT INTO $table_name VALUES ('$senderId','$receiverId','$message')";
-                            
-                        //     ?>
-                        alert('Message sent successfully');
-                    }
-                    document.getElementById("span").onclick = function() {
-                        modal.style.display = "none";
-                    }
-
-                    // When the user clicks anywhere outside of the modal, close it
-                    window.onclick = function(event) {
-                        if (event.target == modal) {
-                            modal.style.display = "none";
-                        }
-                    }
-                </script>
                 <?php
                 if ($i  == 2) {
                     $i = 0;
