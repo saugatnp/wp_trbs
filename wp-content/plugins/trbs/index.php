@@ -339,19 +339,72 @@ function sa_frontend_data()
         $msg = '';
         $userId = get_current_user_id();
         if (isset($_REQUEST['sendmessages'])) {
-            $wpdb->insert("$table_name", [
-                'sender_id' => $userId,
-                'receiver_id' => $_REQUEST['userid'],
-                'message' => $_REQUEST['message'],
-            ]);
-
-
-            if ($wpdb->insert_id > 0) {
-                $msg = "Saved Successfully";
-            } else {
-                $msg = "Failed to save data $wpdb->last_error";
+            // $wpdb->insert("$table_name", [
+            //     'sender_id' => $userId,
+            //     'receiver_id' => $_REQUEST['userid'],
+            //     'message' => $_REQUEST['message'],
+            // ]);
+            function check_conversation($user1, $user2) {
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'conversation';
+                $result = $wpdb->get_row( $wpdb->prepare(
+                    "SELECT conversation_id FROM $table_name WHERE (user_one = %s AND user_two = %s) OR (user_one = %s AND user_two = %s)",
+                    $user1,
+                    $user2,
+                    $user2,
+                    $user1
+                ) );
+            
+                return $result ? $result->conversation_id : false;
             }
+    
+            
+            function insert_conversation_and_message($user1, $user2, $message, $sender) {
+                global $wpdb;
+                $conversation_table = $wpdb->prefix . 'conversation';
+                $message_table = $wpdb->prefix . 'messages';
+            
+                // Insert into conversation table
+                $wpdb->insert( $conversation_table, array(
+                    'user_one' => $user1,
+                    'user_two' => $user2
+                ) );
+                $conversation_id = $wpdb->insert_id;
+            
+                // Insert into messages table
+                $wpdb->insert( $message_table, array(
+                    'conversation_id' => $conversation_id,
+                    'sender_id' => $sender,
+                    'message' => $message
+                ) );
+            }
+            
+            // Function to insert a message into an existing conversation
+            function insert_message($conversation_id, $sender, $message) {
+                global $wpdb;
+                $message_table = $wpdb->prefix . 'messages';
+            
+                $wpdb->insert( $message_table, array(
+                    'conversation_id' => $conversation_id,
+                    'sender_id' => $sender,
+                    'message' => $message
+                ) );
+            }
+
+            if(check_conversation($userId, $_REQUEST['userid'])) {
+                insert_message(check_conversation($userId, $_REQUEST['userid']), $userId, $_REQUEST['message']);
+            } else {
+                insert_conversation_and_message($userId, $_REQUEST['userid'], $_REQUEST['message'], $userId);
+            }
+
+            // if ($wpdb->insert_id > 0) {
+            //     $msg = "Saved Successfully";
+            // } else {
+            //     $msg = "Failed to save data $wpdb->last_error";
+            // }
         }
+
+        
         ?>
 
         <?php
