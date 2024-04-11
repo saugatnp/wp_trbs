@@ -63,6 +63,7 @@ function sa_chat_list_callback()
             border-right: 1px solid #ccc;
             overflow-y: auto;
             padding: 20px;
+            min-width: 10vw;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             /* max-width: 20vw; */
         }
@@ -88,9 +89,9 @@ function sa_chat_list_callback()
             /* Remove bottom border from the last user */
         }
 
-        .sidebar ul li:hover {
+        /* .sidebar ul li:hover {
             background-color: #e0e0e0;
-        }
+        } */
 
         .conversation {
             flex: 3;
@@ -168,20 +169,69 @@ function sa_chat_list_callback()
         button:hover {
             background-color: #0056b3;
         }
+
+        .name-btn {
+            background-color: lightgray;
+            color: black;
+            width: 100%;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .name-btn:hover {
+            background-color: darkgray;
+        }
+
+        center,
+        b {
+            font-size: 20px;
+        }
     </style>
-    </style>
+    <?php
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'conversation';
+    $user_table = $wpdb->prefix . 'users';
+    $message_table = $wpdb->prefix . 'messages';
+    $userId = get_current_user_id();
+    $result =  $wpdb->get_results(
+        "SELECT a.* ,b.user_nicename from $table_name a join $user_table b on ( case when a.user_one = $userId then a.user_two else a.user_one end ) = b.ID;"
+    );
+    if (isset($_REQUEST['namebtn'])) {
+        $conversation_id = $_REQUEST['conversation_id'];
+        $chats = $wpdb->get_results("SELECT a.message , a.sender_id , a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id where a.conversation_id = $conversation_id order by a.sent_at asc;
+        ");
+    }
+    ?>
     <div class="container">
         <div class="sidebar">
             <ul id="message-list">
-                <!-- Sample Message List -->
-                <li>User 1</li>
-                <li>User 2</li>
-                <li>User 3</li>
-                <!-- Add more users dynamically -->
+                <li>
+                    <center><b>User&nbsp;List</b></center>
+                </li>
+                <?php
+                foreach ($result as $row) {
+                    echo "<form method='post'>";
+                    echo "<input type='hidden' name='conversation_id' value='$row->conversation_id'>";
+                    echo "<li><button class='name-btn' name='namebtn' type='submit' value='namebtn'>" . $row->user_nicename . "</button></li>";
+                    echo "</form>";
+                }
+                ?>
             </ul>
         </div>
         <div class="conversation-container">
+            <center><b>Messages&nbsp;</b></center>
+
             <div class="conversation" id="conversation">
+                <?php
+                if (isset($_REQUEST['namebtn'])) {
+                    foreach ($chats as $row) {
+                        echo "<div class='message'><span>$row->message</span><span class='timestamp'>$row->sent_at</span></div>";
+                    }
+                }
+                ?>
+
                 <!-- Conversation will be populated here -->
             </div>
             <div class="input-container">
@@ -190,86 +240,6 @@ function sa_chat_list_callback()
             </div>
         </div>
     </div>
-    <script>
-        // Sample data for demonstration
-        const messages = {
-            "User 1": [{
-                    sender: "User 1",
-                    message: "Hi there!",
-                    timestamp: "12:30 PM"
-                },
-                {
-                    sender: "User 2",
-                    message: "Hey! How are you?",
-                    timestamp: "12:32 PM"
-                },
-                {
-                    sender: "User 1",
-                    message: "I'm good, thanks!",
-                    timestamp: "12:35 PM"
-                }
-            ],
-            "User 2": [{
-                    sender: "User 2",
-                    message: "Hello!",
-                    timestamp: "11:00 AM"
-                },
-                {
-                    sender: "User 1",
-                    message: "Hi! What's up?",
-                    timestamp: "11:02 AM"
-                },
-                {
-                    sender: "User 2",
-                    message: "Not much, just chilling.",
-                    timestamp: "11:05 AM"
-                }
-            ],
-            "User 3": [{
-                    sender: "User 3",
-                    message: "Hey everyone!",
-                    timestamp: "10:00 AM"
-                },
-                {
-                    sender: "User 1",
-                    message: "Hello!",
-                    timestamp: "10:02 AM"
-                }
-            ]
-        };
-
-        const messageList = document.getElementById("message-list");
-        const conversationDiv = document.getElementById("conversation");
-
-        // Function to display conversation for a selected user
-        function displayConversation(user) {
-            conversationDiv.innerHTML = ""; // Clear previous conversation
-            const messagesForUser = messages[user];
-            if (messagesForUser) {
-                messagesForUser.forEach(message => {
-                    const messageDiv = document.createElement("div");
-                    messageDiv.classList.add("message");
-                    messageDiv.innerHTML = `
-                        <span class="sender">${message.sender}:</span>
-                        <span>${message.message}</span>
-                        <span class="timestamp">${message.timestamp}</span>
-                    `;
-                    conversationDiv.appendChild(messageDiv);
-                });
-            }
-        }
-
-        // Populate message list
-        for (const user in messages) {
-            const listItem = document.createElement("li");
-            listItem.textContent = user;
-            listItem.addEventListener("click", () => displayConversation(user));
-            messageList.appendChild(listItem);
-        }
-
-        // Display conversation for the first user by default
-        displayConversation(Object.keys(messages)[0]);
-    </script>
 <?php
 }
 
