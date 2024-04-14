@@ -7,22 +7,49 @@
  *
  */
 register_activation_hook(__FILE__, 'chatSystemTable');
+register_activation_hook(__FILE__, 'messageTable');
 function chatSystemTable()
 {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
     $table_name = $wpdb->prefix . 'conversation';
+    $user_table = $wpdb->prefix . 'users';
+    $sql = "CREATE TABLE `$table_name` (
+       `conversation_id` int(11) NOT NULL AUTO_INCREMENT,
+        `user_one` bigint(20) unsigned DEFAULT NULL,
+        `user_two` bigint(20) unsigned DEFAULT NULL,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`conversation_id`),
+        KEY `fk_user_one` (`user_one`),
+        KEY `fk_user_two` (`user_two`),
+        CONSTRAINT `fk_user_one` FOREIGN KEY (`user_one`) REFERENCES $user_table (`ID`),
+        CONSTRAINT `fk_user_two` FOREIGN KEY (`user_two`) REFERENCES $user_table (`ID`)
+      )$charset_collate;";
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+}
+
+function messageTable()
+{
+    global $wpdb;
+    $charset_collate = $wpdb->get_charset_collate();
+    $table_name = $wpdb->prefix . 'messages';
+    $conversation_table = $wpdb->prefix . 'conversation';
+    $user_table = $wpdb->prefix . 'users';
+
     $sql = "CREATE TABLE `$table_name` (
         `message_id` int(11) NOT NULL AUTO_INCREMENT,
-        `sender_id` bigint(20) unsigned DEFAULT NULL,
-        `receiver_id` bigint(20) unsigned DEFAULT NULL,
+        `conversation_id` int(11) NOT NULL,
         `message` text NOT NULL,
+        `sender_id` bigint(20) unsigned DEFAULT NULL,
         `sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`message_id`),
+        KEY `fk_conversation_id` (`conversation_id`),
         KEY `fk_sender_id` (`sender_id`),
-        KEY `fk_receiver_id` (`receiver_id`),
-        CONSTRAINT `fk_receiver_id` FOREIGN KEY (`receiver_id`) REFERENCES `wp_users` (`ID`),
-        CONSTRAINT `fk_sender_id` FOREIGN KEY (`sender_id`) REFERENCES `wp_users` (`ID`)
+        CONSTRAINT `fk_conversation_id` FOREIGN KEY (`conversation_id`) REFERENCES $conversation_table (`conversation_id`),
+        CONSTRAINT `fk_sender_id` FOREIGN KEY (`sender_id`) REFERENCES $user_table (`ID`)
       )$charset_collate;";
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -129,12 +156,13 @@ function sa_chat_list_callback()
             /* Align sender's message to the left */
         }
 
-         .receiver .message-content {
+        .receiver .message-content {
             background-color: #7fd2ff;
             /* Example color for receiver's message */
             align-self: flex-end;
             /* Align receiver's message to the right */
         }
+
         .receiver span {
             align-self: flex-end;
         }
@@ -234,7 +262,6 @@ function sa_chat_list_callback()
         $chatWithUserName = $_REQUEST['user_nicename'];
         $chats = $wpdb->get_results("SELECT a.message , a.sender_id , a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id where a.conversation_id = $conversation_id order by a.sent_at asc;
         ");
-        
     }
 
 
@@ -250,11 +277,16 @@ function sa_chat_list_callback()
                 'message' => $message
             )
         );
-        $chats = $wpdb->get_results("SELECT a.message , a.sender_id , a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id where a.conversation_id = $conversation_id order by a.sent_at asc;
+        $chats = $wpdb->get_results("SELECT a.message , a.sender_id , user_one.user_nicename AS user_one_name, user_one.ID AS user_one_id, user_two.user_nicename AS user_two_name, user_two.ID AS user_two_id,a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id JOIN $user_table user_one ON user_one.ID = b.user_one JOIN $user_table user_two ON user_two.ID = b.user_two WHERE a.conversation_id = $conversation_id order by a.sent_at asc
         ");
+        if ($chats[0]->user_one_id == $userId) {
+            $chatWithUserName = $chats[0]->user_two_name;
+        } else {
+            $chatWithUserName = $chats[0]->user_one_name;
+        }
     }
 
-    
+
 
 
 
