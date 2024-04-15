@@ -14,6 +14,7 @@ function crudOperationsTable()
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
     $table_name = $wpdb->prefix . 'trbs';
+    $user_table = $wpdb->prefix . 'users';
     $sql = "CREATE TABLE `$table_name` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `trb_code` varchar(20) NOT NULL,
@@ -22,8 +23,10 @@ function crudOperationsTable()
     `specific_invention` varchar(200) DEFAULT NULL,
     `level_no` varchar(50) DEFAULT NULL,
     `level_meaning` varchar(50) DEFAULT NULL,
-    `user_id` varchar(5) NOT NULL,
-    PRIMARY KEY(id)
+    `user_id` bigint(20) unsigned DEFAULT NULL,
+    PRIMARY KEY(id),
+    KEY `fk_user_id` (`user_id`),
+    CONSTRAINT `fk_user_id` FOREIGN KEY (`user_id`) REFERENCES $user_table (`ID`)
     )$charset_collate;";
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -36,6 +39,7 @@ function unapprovedTrbsTable()
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
     $table_name = $wpdb->prefix . 'unapproved_trbs';
+    $user_table = $wpdb->prefix . 'users';
     $sql = "CREATE TABLE `$table_name` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `trb_code` varchar(20) NOT NULL,
@@ -44,8 +48,10 @@ function unapprovedTrbsTable()
     `specific_invention` varchar(200) DEFAULT NULL,
     `level_no` varchar(50) DEFAULT NULL,
     `level_meaning` varchar(50) DEFAULT NULL,
-    `user_id` varchar(5) NOT NULL,
-    PRIMARY KEY(id)
+    `user_id` bigint(20) unsigned DEFAULT NULL,
+    PRIMARY KEY(id),
+    KEY `fk_unapprove_user_id` (`user_id`),
+    CONSTRAINT `fk_unapprove_user_id` FOREIGN KEY (`user_id`) REFERENCES $user_table (`ID`)
     )$charset_collate;";
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
