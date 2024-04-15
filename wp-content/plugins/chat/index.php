@@ -234,34 +234,18 @@ function sa_chat_list_callback()
         "SELECT a.* ,b.user_nicename , b.user_nicename from $table_name a join $user_table b on ( case when a.user_one = $userId then a.user_two else a.user_one end ) = b.ID;"
     );
 
-
-    // function getUserList($wpdb, $table_name, $user_table, $userId)
-    // {
-    //     $result = $wpdb->get_row(
-    //         $wpdb->prepare(
-    //             "SELECT a.* ,b.user_nicename from $table_name a join $user_table b on ( case when a.user_one = $userId then a.user_two else a.user_one end ) = b.ID;"
-    //         )
-    //     );
-    //     return $result;
-    // }
-    // function getUserChat($conversation_id){
-    //     global $wpdb;
-    //     $table_name = $wpdb->prefix . 'conversation';
-    //     $message_table = $wpdb->prefix . 'messages';
-    //     $result =  $wpdb->get_results(
-    //         $wpdb->get_results("SELECT a.message , a.sender_id , a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id where a.conversation_id = $conversation_id order by a.sent_at asc;")
-    //     );
-    //     return $result;
-    // }
-
     global $conversation_id;
     global $chatWithUserName;
     if (isset($_REQUEST['namebtn'])) {
         global $chatWithUserName;
         $conversation_id = $_REQUEST['conversation_id'];
-        $chatWithUserName = $_REQUEST['user_nicename'];
-        $chats = $wpdb->get_results("SELECT a.message , a.sender_id , a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id where a.conversation_id = $conversation_id order by a.sent_at asc;
+        $chats = $wpdb->get_results("SELECT a.message , a.sender_id , user_one.user_nicename AS user_one_name, user_one.ID AS user_one_id, user_two.user_nicename AS user_two_name, user_two.ID AS user_two_id,a.sent_at FROM $message_table a join $table_name b on a.conversation_id = b.conversation_id JOIN $user_table user_one ON user_one.ID = b.user_one JOIN $user_table user_two ON user_two.ID = b.user_two WHERE a.conversation_id = $conversation_id order by a.sent_at asc
         ");
+         if ($chats[0]->user_one_id == $userId) {
+            $chatWithUserName = $chats[0]->user_two_name;
+        } else {
+            $chatWithUserName = $chats[0]->user_one_name;
+        }
     }
 
 
@@ -303,7 +287,6 @@ function sa_chat_list_callback()
                 <?php
                 foreach ($result as $row) {
                     echo "<form method='post'>";
-                    echo "<input type='hidden' name='user_nicename' value='$row->user_nicename'>";
                     echo "<input type='hidden' name='conversation_id' value='$row->conversation_id'>";
                     echo "<li><button class='name-btn' name='namebtn' type='submit' value='namebtn'>" . $row->user_nicename . "</button></li>";
                     echo "</form>";
@@ -323,7 +306,7 @@ function sa_chat_list_callback()
                         if ($row->sender_id == $userId) {
                             echo "<div class='message receiver'><span class='sender'>You</span><span class='message-content'>$row->message</span><span class='timestamp'>$row->sent_at</span></div>";
                         } else
-                            echo "<div class='message'><span>$row->message</span><span class='timestamp'>$row->sent_at</span></div>";
+                            echo "<div class='message'><span class='sender'>$chatWithUserName</span><span>$row->message</span><span class='timestamp'>$row->sent_at</span></div>";
                     }
 
                     ?>
