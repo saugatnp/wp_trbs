@@ -233,7 +233,7 @@ function sa_chat_list_callback()
     $message_table = $wpdb->prefix . 'messages';
     $userId = get_current_user_id();
     $result =  $wpdb->get_results(
-        "SELECT a.* ,b.user_nicename , b.user_nicename from $table_name a join $user_table b on ( case when a.user_one = $userId then a.user_two else a.user_one end ) = b.ID;"
+        "SELECT a.* ,b.user_nicename , b.user_nicename from $table_name a join $user_table b on ( case when a.user_one = $userId then a.user_two else a.user_one end ) = b.ID  where (a.user_one = $userId or a.user_two = $userId);"
     );
     if ($result) {
         $conversation_id = $result[0]->conversation_id;
